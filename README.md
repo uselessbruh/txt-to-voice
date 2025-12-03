@@ -178,7 +178,3 @@ If you encounter any issues or have questions:
 2. Ensure your browser supports the Web Speech API
 3. Try a different browser or voice
 4. Open an issue on GitHub
-
----
-
-**Made with ❤️ for Indian voices | Works best in Chrome, Edge & Safari**
