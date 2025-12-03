@@ -70,62 +70,62 @@ function loadVoices() {
 function filterVoices() {
     const filter = languageFilter.value;
     voiceSelect.innerHTML = '';
-    
+
     let filteredVoices = allVoices;
-    
+
     if (filter === 'indian') {
-        filteredVoices = allVoices.filter(voice => 
+        filteredVoices = allVoices.filter(voice =>
             indianLanguages.some(lang => {
                 const langCode = lang.split('-')[0];
-                return voice.lang.toLowerCase().includes(langCode.toLowerCase()) || 
-                       voice.lang.toLowerCase() === lang.toLowerCase();
+                return voice.lang.toLowerCase().includes(langCode.toLowerCase()) ||
+                    voice.lang.toLowerCase() === lang.toLowerCase();
             })
         );
     } else if (filter !== 'all') {
-        filteredVoices = allVoices.filter(voice => 
+        filteredVoices = allVoices.filter(voice =>
             voice.lang.toLowerCase().startsWith(filter.toLowerCase()) ||
             voice.lang.toLowerCase().includes(`-${filter.toLowerCase()}`)
         );
     }
-    
+
     // Sort Indian voices first, then alphabetically
     filteredVoices.sort((a, b) => {
         const aIsIndian = indianLanguages.some(lang => {
             const langCode = lang.split('-')[0];
-            return a.lang.toLowerCase().includes(langCode.toLowerCase()) || 
-                   a.lang.toLowerCase() === lang.toLowerCase();
+            return a.lang.toLowerCase().includes(langCode.toLowerCase()) ||
+                a.lang.toLowerCase() === lang.toLowerCase();
         });
         const bIsIndian = indianLanguages.some(lang => {
             const langCode = lang.split('-')[0];
-            return b.lang.toLowerCase().includes(langCode.toLowerCase()) || 
-                   b.lang.toLowerCase() === lang.toLowerCase();
+            return b.lang.toLowerCase().includes(langCode.toLowerCase()) ||
+                b.lang.toLowerCase() === lang.toLowerCase();
         });
         if (aIsIndian && !bIsIndian) return -1;
         if (!aIsIndian && bIsIndian) return 1;
         return a.name.localeCompare(b.name);
     });
-    
+
     filteredVoices.forEach((voice) => {
         const option = document.createElement('option');
         option.value = allVoices.indexOf(voice);
         const flag = getLanguageFlag(voice.lang);
         option.textContent = `${flag} ${voice.name} (${voice.lang})`;
-        
+
         // Highlight Indian voices
         const isIndian = indianLanguages.some(lang => {
             const langCode = lang.split('-')[0];
-            return voice.lang.toLowerCase().includes(langCode.toLowerCase()) || 
-                   voice.lang.toLowerCase() === lang.toLowerCase();
+            return voice.lang.toLowerCase().includes(langCode.toLowerCase()) ||
+                voice.lang.toLowerCase() === lang.toLowerCase();
         });
-        
+
         if (isIndian) {
             option.style.fontWeight = 'bold';
             option.style.color = '#FF9933';
         }
-        
+
         voiceSelect.appendChild(option);
     });
-    
+
     if (filteredVoices.length === 0) {
         const option = document.createElement('option');
         option.textContent = 'No voices available for this language';
@@ -141,21 +141,21 @@ function filterVoices() {
 // Get flag emoji for language
 function getLanguageFlag(lang) {
     const langLower = lang.toLowerCase();
-    
+
     // Indian languages - all get Indian flag
     const indianLangCodes = ['hi', 'ta', 'te', 'ml', 'bn', 'mr', 'gu', 'kn', 'pa', 'ur', 'or', 'as', 'sa', 'kok', 'mai', 'sd', 'ks', 'ne', 'doi', 'mni', 'sat', 'bho'];
-    
+
     for (let code of indianLangCodes) {
         if (langLower.startsWith(code) || langLower.includes(`-${code}`)) {
             return '🇮🇳';
         }
     }
-    
+
     // Special check for en-IN (Indian English)
     if (langLower.includes('en-in') || langLower === 'en-in') {
         return '🇮🇳';
     }
-    
+
     // Other common languages
     const flags = {
         'en-us': '🇺🇸', 'en-gb': '🇬🇧', 'en-au': '🇦🇺', 'en-ca': '🇨🇦',
@@ -164,11 +164,11 @@ function getLanguageFlag(lang) {
         'ru': '🇷🇺', 'ar': '🇸🇦', 'nl': '🇳🇱', 'sv': '🇸🇪',
         'pl': '🇵🇱', 'tr': '🇹🇷', 'th': '🇹🇭', 'vi': '🇻🇳'
     };
-    
+
     for (let key in flags) {
         if (langLower.startsWith(key)) return flags[key];
     }
-    
+
     return '🌐';
 }
 
@@ -207,7 +207,7 @@ document.querySelectorAll('.sample-btn').forEach(btn => {
         const lang = btn.getAttribute('data-lang');
         textInput.value = sampleTexts[lang];
         charCount.textContent = textInput.value.length;
-        
+
         // Auto-select matching language filter
         languageFilter.value = lang;
         filterVoices();
@@ -221,18 +221,18 @@ let elapsed = 0;
 
 function speak() {
     const text = textInput.value.trim();
-    
+
     if (text === '') {
         alert('Please enter some text to convert to speech!');
         return;
     }
-    
+
     // Check if voices are loaded
     if (!allVoices || allVoices.length === 0) {
         alert('Voices are still loading. Please wait a moment and try again.');
         return;
     }
-    
+
     // If already speaking, stop first
     if (synth.speaking || isPaused) {
         console.log('Already speaking, stopping first...');
@@ -248,32 +248,32 @@ function speak() {
         }, 200);
         return;
     }
-    
+
     startSpeaking(text);
 }
 
 function startSpeaking(text) {
     console.log('Starting speech...');
-    
+
     // Create new utterance
     currentUtterance = new SpeechSynthesisUtterance(text);
-    
+
     // Set selected voice
     const selectedVoiceIndex = parseInt(voiceSelect.value);
     if (!isNaN(selectedVoiceIndex) && allVoices[selectedVoiceIndex]) {
         currentUtterance.voice = allVoices[selectedVoiceIndex];
     }
-    
+
     // Set rate, pitch, and volume
     currentUtterance.rate = parseFloat(rateControl.value) || 1;
     const pitchValue = parseFloat(pitchControl.value) || 1;
     currentUtterance.pitch = pitchValue < 0 ? 0 : (pitchValue > 2 ? 2 : pitchValue);
     currentUtterance.volume = parseFloat(volumeControl.value) || 1;
-    
+
     // Calculate estimated duration
     estimatedDuration = (text.length / 10) * (1 / currentUtterance.rate) * 1000;
     elapsed = 0;
-    
+
     // Event: Speech started
     currentUtterance.onstart = () => {
         console.log('Speech started event');
@@ -285,18 +285,18 @@ function startSpeaking(text) {
         progressContainer.style.display = 'block';
         progressFill.style.width = '0%';
         progressText.textContent = 'Speaking...';
-        
+
         // Start progress animation
         elapsed = 0;
         if (progressInterval) clearInterval(progressInterval);
-        
+
         progressInterval = setInterval(() => {
             elapsed += 100;
             const progress = Math.min((elapsed / estimatedDuration) * 100, 99);
             progressFill.style.width = progress + '%';
         }, 100);
     };
-    
+
     // Event: Speech ended normally
     currentUtterance.onend = () => {
         console.log('Speech ended event');
@@ -316,7 +316,7 @@ function startSpeaking(text) {
             progressFill.style.width = '0%';
         }, 1500);
     };
-    
+
     // Event: Speech error
     currentUtterance.onerror = (event) => {
         // Only handle real errors, not 'canceled' which is expected
@@ -325,7 +325,7 @@ function startSpeaking(text) {
             isPaused = false;
             return;
         }
-        
+
         console.error('Speech error:', event.error);
         isPaused = false;
         if (progressInterval) {
@@ -339,19 +339,19 @@ function startSpeaking(text) {
         progressContainer.style.display = 'none';
         alert('Speech Error: ' + event.error);
     };
-    
+
     // Event: Speech paused
     currentUtterance.onpause = () => {
         console.log('Speech paused event fired');
         isPaused = true;
     };
-    
+
     // Event: Speech resumed
     currentUtterance.onresume = () => {
         console.log('Speech resumed event fired');
         isPaused = false;
     };
-    
+
     // Start speaking
     console.log('Calling synth.speak()...');
     synth.speak(currentUtterance);
@@ -360,17 +360,17 @@ function startSpeaking(text) {
 // Pause function
 function pause() {
     console.log('Pause clicked - Speaking:', synth.speaking, 'isPaused:', isPaused);
-    
+
     if (synth.speaking && !isPaused) {
         console.log('Pausing speech...');
         synth.pause();
         isPaused = true;
-        
+
         // Update UI
         pauseBtn.disabled = true;
         resumeBtn.disabled = false;
         progressText.textContent = 'Paused';
-        
+
         // Stop progress bar
         if (progressInterval) {
             console.log('Clearing progress interval');
@@ -385,26 +385,26 @@ function pause() {
 // Resume function
 function resume() {
     console.log('Resume clicked - Speaking:', synth.speaking, 'isPaused:', isPaused);
-    
+
     if (isPaused) {
         console.log('Resuming speech...');
         synth.resume();
         isPaused = false;
-        
+
         // Update UI
         pauseBtn.disabled = false;
         resumeBtn.disabled = true;
         progressText.textContent = 'Speaking...';
-        
+
         // Restart progress bar from current position
         if (progressInterval) clearInterval(progressInterval);
-        
+
         progressInterval = setInterval(() => {
             elapsed += 100;
             const progress = Math.min((elapsed / estimatedDuration) * 100, 99);
             progressFill.style.width = progress + '%';
         }, 100);
-        
+
         console.log('Progress bar restarted');
     } else {
         console.log('Cannot resume - not paused. isPaused:', isPaused);
@@ -414,19 +414,19 @@ function resume() {
 // Stop function
 function stop() {
     console.log('Stop requested - Speaking:', synth.speaking, 'isPaused:', isPaused);
-    
+
     // Clear progress interval
     if (progressInterval) {
         clearInterval(progressInterval);
         progressInterval = null;
     }
-    
+
     // Cancel speech if active
     if (synth.speaking || isPaused) {
         synth.cancel();
         isPaused = false;
     }
-    
+
     // Reset UI
     speakBtn.disabled = false;
     pauseBtn.disabled = true;
@@ -441,7 +441,7 @@ function stop() {
 function clear() {
     // Stop speech if running
     stop();
-    
+
     // Clear text
     textInput.value = '';
     charCount.textContent = '0';
@@ -465,17 +465,17 @@ textInput.addEventListener('keydown', (e) => {
 function logAvailableVoices() {
     console.log('=== Available Voices ===');
     console.log(`Total voices: ${allVoices.length}`);
-    
-    const indianVoices = allVoices.filter(voice => 
+
+    const indianVoices = allVoices.filter(voice =>
         indianLanguages.some(lang => {
             const langCode = lang.split('-')[0];
-            return voice.lang.toLowerCase().includes(langCode.toLowerCase()) || 
-                   voice.lang.toLowerCase() === lang.toLowerCase();
+            return voice.lang.toLowerCase().includes(langCode.toLowerCase()) ||
+                voice.lang.toLowerCase() === lang.toLowerCase();
         })
     );
-    
+
     console.log(`Indian voices: ${indianVoices.length}`);
-    
+
     // Group by language
     const voicesByLang = {};
     allVoices.forEach(voice => {
@@ -484,7 +484,7 @@ function logAvailableVoices() {
         }
         voicesByLang[voice.lang].push(voice.name);
     });
-    
+
     console.log('Voices by language:', voicesByLang);
     console.log('Indian voices found:', indianVoices.map(v => `${v.name} (${v.lang})`));
 }
@@ -495,7 +495,7 @@ window.addEventListener('load', () => {
     // Set Indian language filter as default
     languageFilter.value = 'indian';
     filterVoices();
-    
+
     // Log available voices for debugging
     setTimeout(() => {
         if (allVoices.length > 0) {
